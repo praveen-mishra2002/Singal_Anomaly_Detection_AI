@@ -3,12 +3,38 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+from pathlib import Path
 
-# Add Code directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Code'))
+# Robust import handling for multiple directory structures
+def setup_imports():
+    """Setup Python path for imports from multiple possible locations."""
+    current_file = Path(__file__).resolve()
+    test_dir = current_file.parent
+    code_dir = test_dir.parent / 'Code'
+    root_dir = test_dir.parent.parent.parent
 
-from detect_anomalies import CANAnomalyDetector
-from generate_data import generate_can_signal_data
+    # Paths to try in order
+    paths = [
+        str(code_dir),
+        str(test_dir),
+        str(root_dir),
+        str(root_dir / 'CAN Protocol' / 'Code'),
+    ]
+
+    for path in paths:
+        if path not in sys.path and os.path.exists(path):
+            sys.path.insert(0, path)
+
+setup_imports()
+
+# Import with error handling
+try:
+    from detect_anomalies import CANAnomalyDetector
+    from generate_data import generate_can_signal_data
+except ImportError as e:
+    print(f"Import Error: {e}")
+    print(f"Python Path: {sys.path}")
+    raise
 
 
 class TestCANSignalAnomalies:
